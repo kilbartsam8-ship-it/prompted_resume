@@ -1,0 +1,156 @@
+{
+  "classification": "Experienced",
+  "name": "Sam Kilbart",
+  "email": "samkilbarta17@gmail.com",
+  "phone": "+91 9363379371",
+  "profile_links": {
+    "LinkedIn": "https://www.linkedin.com/in/sam-kilbart-121199247/",
+    "GitHub": "https://github.com/kilbartsam8-ship-it"
+  },
+  "technical_skills": [
+    "Python Programming",
+    "Model Context Protocol (MCP)",
+    "LangChain",
+    "LangGraph",
+    "Prompt Engineering",
+    "Docker",
+    "Git and Github",
+    "AI Agent",
+    "AI Integration",
+    "NLP",
+    "Retrieval-Augmented Generation (RAG)"
+  ],
+  "soft_skills": [],
+  "projects": [
+    {
+      "title": "Marketing Copilot",
+      "description": "Developed an AI chatbot to guide users through product discovery and recommendations. Implemented a virtual try-on system using apparel try-on models to enhance product visualization. Integrated LLM-powered interactions to improve user engagement and personalization.",
+      "technologies_used": [
+        "AI",
+        "LLM",
+        "Apparel try-on models"
+      ],
+      "responsibilities": [
+        "Development",
+        "Implementation",
+        "Integration"
+      ],
+      "project_links": []
+    },
+    {
+      "title": "Email Automation",
+      "description": "Built an automation pipeline that generates personalized emails from CSV user data using LLMs. Implemented end-to-end workflow including content generation, validation, and automated sending. Improved outreach efficiency by reducing manual effort and ensuring consistent messaging.",
+      "technologies_used": [
+        "LLM",
+        "CSV"
+      ],
+      "responsibilities": [
+        "Development",
+        "Implementation"
+      ],
+      "project_links": []
+    },
+    {
+      "title": "AI Ninjas",
+      "description": "Developed intelligent AI agents to automate proposal writing and task workflows for freelancers. Designed prompts, logic flows, and automation modules to improve user productivity. Collaborated with product teams to integrate AI features into the platform.",
+      "technologies_used": [
+        "AI",
+        "LLM"
+      ],
+      "responsibilities": [
+        "Development",
+        "Design",
+        "Collaboration"
+      ],
+      "project_links": []
+    },
+    {
+      "title": "Prompted",
+      "description": "Worked on an AI-powered networking platform similar to LinkedIn with resume-JD matching. Built and optimized AI agents that match candidates to jobs using LLM-based similarity models. Integrated end-to-end workflows for profile enhancement, recommendations, and automation.",     
+      "technologies_used": [
+        "AI",
+        "LLM"
+      ],
+      "responsibilities": [
+        "Development",
+        "Optimization",
+        "Integration"
+      ],
+      "project_links": []
+    },
+    {
+      "title": "Social Story",
+      "description": "Developed an AI-based storytelling system for autistic children using LLMs to generate topic-based stories. Created scene-by-scene images using image-generation models and added voice-over using TTS. Streamlined the content pipeline to help parents/guardians generate personalized learning stories.",
+      "technologies_used": [
+        "AI",
+        "LLM",
+        "TTS"
+      ],
+      "responsibilities": [
+        "Development",
+        "Creation",
+        "Streamlining"
+      ],
+      "project_links": []
+    }
+  ],
+  "certifications": [],
+  "education": [
+    {
+      "degree_with_specialization": "Bachelor of Engineering: Electronics And Communication Engineering",
+      "college": "Kongu Engineering College",
+      "year": "2021-2024",
+      "grades": "7.05"
+    },
+    {
+      "degree_with_specialization": "Diploma in Electrical Electronics Engineering",
+      "college": "VSVN Polytechnic College",
+      "year": "2018-2021",
+      "grades": "87%"
+    },
+    {
+      "degree_with_specialization": "SSLC",
+      "college": "KVS English Medium School",
+      "year": "2017-2018",
+      "grades": "75%"
+    }
+  ],
+  "languages_known": [
+    "Tamil",
+    "English"
+  ],
+  "hobbies_or_extracurriculars": "",
+  "current_location": "Hyderabad",
+  "summary": "Dynamic AI Developer with 1 year of hands-on experience in python, specializing in AI integration, Retrieval-Augmented Generation (RAG). Successfully designed and implemented innovative AI systems and automated testing frameworks that significantly enhanced operational efficiency and software reliability.",
+  "total_experience": 1,
+  "experience": [
+    {
+      "company": "Supernal Info Tech",
+      "role": "AI Developer",
+      "period": "DEC 2024 \u2013 Present",
+      "duration": "",
+      "technologies_used": [
+        "Python Programming",
+        "Model Context Protocol (MCP)",
+        "LangChain",
+        "LangGraph",
+        "Prompt Engineering",
+        "Docker",
+        "Git and Github",
+        "AI Agent",
+        "AI Integration",
+        "NLP",
+        "Retrieval-Augmented Generation (RAG)"
+      ],
+      "responsibilities": [
+        "Documented AI architectures, prompting strategies, and experimentation results for knowledge sharing and reproducibility. Collaborated with cross-functional teams to define AI requirements, iterate on features, and ensure successful delivery of AI-driven product capabilities. Continuously experimented with state-of-the-art prompting techniques, model fine-tuning, and cost-optimization strategies to improve response quality and reduce inference costs."
+      ]
+    }
+  ],
+  "internships": [],
+  "current_ctc": null,
+  "expected_ctc": null,
+  "notice_period": null,
+  "preferred_location": null,
+  "work_mode": null
+}

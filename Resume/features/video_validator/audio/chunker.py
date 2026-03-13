@@ -1,0 +1,22 @@
+# features/video_validator/audio/chunker.py
+
+from typing import List
+
+
+class TranscriptChunker:
+    def chunk(
+        self,
+        text: str,
+        chunk_size: int,
+        overlap: int
+    ) -> List[str]:
+
+        chunks = []
+        start = 0
+
+        while start < len(text):
+            end = start + chunk_size
+            chunks.append(text[start:end])
+            start = end - overlap
+
+        return chunks

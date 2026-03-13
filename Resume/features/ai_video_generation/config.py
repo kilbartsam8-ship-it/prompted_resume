@@ -1,0 +1,3 @@
+DEFAULT_LLM_MODEL = "llama-3.3-70b-versatile"
+DEFAULT_TTS_MODEL = "chatterbox"
+VIDEO_RESOLUTION = "1280x720"

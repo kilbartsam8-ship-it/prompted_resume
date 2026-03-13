@@ -1,0 +1,11 @@
+# semantic_matching/config.py
+
+EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+
+COSINE_THRESHOLD = 0.55
+EUCLIDEAN_MAX_DISTANCE = 1.2
+
+COSINE_WEIGHT = 0.7
+EUCLIDEAN_WEIGHT = 0.3
+
+TOP_K = 100

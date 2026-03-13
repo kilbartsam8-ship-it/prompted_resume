@@ -1,0 +1,8 @@
+/.venv
+/.vscode
+/unwanted folder
+/test
+/tmp
+/video
+/yolov8n.pt
+.env
