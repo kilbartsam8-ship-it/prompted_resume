@@ -6,7 +6,6 @@ from typing import Dict, Any, List, Optional
 class ResumeData:
     data: Dict[str, Any]
 
-
 @dataclass
 class ChatState:
     user_id: str
