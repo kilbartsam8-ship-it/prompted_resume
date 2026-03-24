@@ -62,30 +62,42 @@ class ResumeChatbotService:
         self,
         state: ChatState,
         user_input: str
-    ) -> dict | str:
+    ) -> dict:
         if not state.current_field:
-            return "No active field to update. Please request the next question."
+            return {
+                "status": "error",
+                "message": "No active field to update. Please request the next question.",
+            }
 
+        field = state.current_field
         is_clean, sanitized = self.sanitizer.sanitize(user_input)
         if not is_clean:
-            return sanitized
+            return {
+                "status": "invalid",
+                "question": sanitized,
+                "field": field,
+            }
 
         if sanitized.lower() == "skip":
-            state.resume.data[state.current_field] = None
+            state.resume.data[field] = None
         else:
             validate_prompt = ResumePromptBuilder.validate_answer(
-                state.current_field, sanitized
+                field, sanitized
             )
             verdict_raw = await self.llm.generate(validate_prompt)
             verdict = ChatValidationOutput.parse_raw_text(verdict_raw)
 
             if verdict.verdict != "YES":
                 raw = await self.llm.generate(
-                    ResumePromptBuilder.reask_question(state.current_field)
+                    ResumePromptBuilder.reask_question(field)
                 )
-                return ChatQuestionOutput.parse_raw_text(raw).question
+                return {
+                    "status": "invalid",
+                    "question": ChatQuestionOutput.parse_raw_text(raw).question,
+                    "field": field,
+                }
 
-            state.resume.data[state.current_field] = sanitized
+            state.resume.data[field] = sanitized
 
         # move forward
         state.pending_fields.pop(0)
@@ -99,7 +111,8 @@ class ResumeChatbotService:
         if state.completed:
             return {
                 "status": "completed",
-                "resume": state.resume.data
+                "resume": state.resume.data,
+                "field": field,
             }
 
-        return {"status": "next"}
+        return {"status": "next", "field": field}

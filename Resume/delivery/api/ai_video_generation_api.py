@@ -97,7 +97,7 @@ def _load_resume_json_from_path(resume_json_path: str) -> dict:
 
 @app.get("/health")
 async def health() -> dict:
-    return success_response("Health check successful.", 200, {"status": "ok"})
+    return success_response("Health check successful.", 200, {"status": True})
 
 
 async def _generate_ai_video(

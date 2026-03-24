@@ -58,18 +58,23 @@ async def run_full_flow():
     user_id = "local_user"
     state = bot.start_or_resume(user_id, resume_json, missing_fields)
 
+    question = await bot.next_question(state)
     while True:
-        question = await bot.next_question(state)
         if question is None:
             print("\nAll missing fields completed.")
             break
         print(f"\nLLM: {question}")
         answer = input("You (type 'skip' to skip): ").strip()
         response = await bot.handle_user_input(state, answer)
-        if isinstance(response, str):
-            print(f"Notice: {response}")
-        elif response.get("status") == "completed":
+        if response.get("status") == "invalid":
+            question = response.get("question")
+            continue
+        if response.get("status") == "error":
+            print(f"Notice: {response.get('message')}")
             break
+        if response.get("status") == "completed":
+            break
+        question = await bot.next_question(state)
 
     filled_resume = state.resume.data
     print("\nFilled Resume JSON")

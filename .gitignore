@@ -6,4 +6,5 @@
 /video
 **/yolov8n.pt
 .env
-
+/assets
+/assets.zip

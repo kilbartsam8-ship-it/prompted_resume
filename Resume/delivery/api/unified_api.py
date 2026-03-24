@@ -28,7 +28,7 @@ app.include_router(chatbot_app.router, prefix="/chatbot-api", tags=["chatbot"])
 
 @app.get("/health")
 async def health() -> dict:
-    return success_response("Health check successful.", 200, {"status": "ok"})
+    return success_response("Health check successful.", 200, {"status": True})
 
 
 if __name__ == "__main__":

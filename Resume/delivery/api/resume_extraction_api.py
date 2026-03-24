@@ -63,7 +63,7 @@ def _status_code_for_error(exc: Exception) -> int:
 
 @app.get("/health")
 async def health() -> dict:
-    return success_response("Health check successful.", 200, {"status": "ok"})
+    return success_response("Health check successful.", 200, {"status": True})
 
 
 @app.post("/resume/extract/path")

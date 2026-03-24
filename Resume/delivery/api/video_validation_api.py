@@ -59,7 +59,7 @@ def _load_json_file(upload: UploadFile) -> dict:
 
 @app.get("/health")
 async def health() -> dict:
-    return success_response("Health check successful.", 200, {"status": "ok"})
+    return success_response("Health check successful.", 200, {"status": True})
 
 
 @app.post("/video/validate/path")

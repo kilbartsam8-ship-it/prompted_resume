@@ -85,12 +85,18 @@ class ResumeOnboardingPipeline:
 
         result = await self.chatbot.handle_user_input(state, answer)
 
-        if isinstance(result, str):
+        if result.get("status") == "invalid":
             return {
                 "status": "awaiting_answer",
-                "question": result,
+                "question": result["question"],
                 "current_field": state.current_field,
                 "missing_fields": list(state.pending_fields),
+            }
+
+        if result.get("status") == "error":
+            return {
+                "status": "error",
+                "message": result.get("message") or "Invalid request.",
             }
 
         if result.get("status") == "completed":
