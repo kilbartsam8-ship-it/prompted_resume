@@ -4,7 +4,6 @@
 /test
 /tmp
 /video
-/yolov8n.pt
+**/yolov8n.pt
 .env
-/Resume/yolov8n.pt
-/Resume/delivery/api/yolov8n.pt
+
