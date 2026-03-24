@@ -11,8 +11,13 @@ from Resume.delivery.api.resume_extraction_api import app as resume_extraction_a
 from Resume.delivery.api.video_validation_api import app as video_validation_app
 from Resume.delivery.api.ai_video_generation_api import app as ai_video_generation_app
 from Resume.delivery.api.chatbot_routes import app as chatbot_app
+from Resume.delivery.api.response_utils import (
+    register_exception_handlers,
+    success_response,
+)
 
 app = FastAPI(title="Unified Resume Platform API")
+register_exception_handlers(app)
 
 # Include all sub-app routes on a single port without mounting sub-apps.
 app.include_router(resume_extraction_app.router, prefix="/resume-api", tags=["resume"])
@@ -23,7 +28,7 @@ app.include_router(chatbot_app.router, prefix="/chatbot-api", tags=["chatbot"])
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok"}
+    return success_response("Health check successful.", 200, {"status": "ok"})
 
 
 if __name__ == "__main__":

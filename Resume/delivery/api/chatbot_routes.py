@@ -15,9 +15,15 @@ from Resume.core.llm_clients.groq_client import GroqLLMClient
 from Resume.features.chatbot.sanitizer import InputSanitizer
 from Resume.features.chatbot.service import ResumeChatbotService
 from Resume.features.chatbot.state_store.redis_store import RedisStateStore
+from Resume.delivery.api.response_utils import (
+    error_response,
+    register_exception_handlers,
+    success_response,
+)
 
 
 app = FastAPI(title="Chatbot API")
+register_exception_handlers(app)
 redis_client = None
 
 
@@ -56,7 +62,7 @@ class ChatbotRequestBody(BaseModel):
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok"}
+    return success_response("Health check successful.", 200, {"status": "ok"})
 
 def _state_payload(state, question: str | None = None) -> dict:
     payload = {
@@ -90,77 +96,141 @@ def _store_history(user_id: str, entry_type: str, payload: dict) -> None:
 @app.post("/chatbot")
 async def chatbot(body: ChatbotRequestBody):
     user_id = body.user_id
+    try:
+        if body.resume_json is not None:
+            missing_fields = body.resume_json.get("missing_fields", [])
+            state = service.start_or_resume(user_id, body.resume_json, missing_fields)
+        else:
+            state = store.get(user_id)
+            if not state:
+                raise HTTPException(status_code=404, detail="No active chatbot session for this user.")
 
-    if body.resume_json is not None:
-        missing_fields = body.resume_json.get("missing_fields", [])
-        state = service.start_or_resume(user_id, body.resume_json, missing_fields)
-    else:
-        state = store.get(user_id)
-        if not state:
-            raise HTTPException(status_code=404, detail="No active chatbot session for this user.")
+        if body.answer is not None:
+            if state.current_field:
+                _store_history(
+                    user_id,
+                    "answer",
+                    {"field": state.current_field, "answer": body.answer},
+                )
 
-    if body.answer is not None:
-        if state.current_field:
-            _store_history(
-                user_id,
-                "answer",
-                {"field": state.current_field, "answer": body.answer},
+            try:
+                result = await service.handle_user_input(state, body.answer)
+            except Exception as exc:
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to process chatbot answer: {exc}"
+                ) from exc
+
+            if isinstance(result, str):
+                _store_history(
+                    user_id,
+                    "question",
+                    {"field": state.current_field, "question": result},
+                )
+                payload = _state_payload(state, question=result)
+                return success_response(
+                    "Chatbot response generated successfully.",
+                    200,
+                    {"user_id": user_id, "result": payload},
+                )
+
+            if result.get("status") == "completed":
+                payload = _completed_payload(state)
+                return success_response(
+                    "Chatbot session completed successfully.",
+                    200,
+                    {"user_id": user_id, "result": payload},
+                )
+
+        if state.completed or not state.pending_fields:
+            payload = _completed_payload(state)
+            return success_response(
+                "Chatbot session completed successfully.",
+                200,
+                {"user_id": user_id, "result": payload},
             )
 
         try:
-            result = await service.handle_user_input(state, body.answer)
+            question = await service.next_question(state)
         except Exception as exc:
-            raise HTTPException(status_code=500, detail=f"Failed to process chatbot answer: {exc}") from exc
+            raise HTTPException(
+                status_code=500, detail=f"Failed to generate chatbot question: {exc}"
+            ) from exc
 
-        if isinstance(result, str):
-            _store_history(
-                user_id,
-                "question",
-                {"field": state.current_field, "question": result},
+        if question is None:
+            payload = _completed_payload(state)
+            return success_response(
+                "Chatbot session completed successfully.",
+                200,
+                {"user_id": user_id, "result": payload},
             )
-            return _state_payload(state, question=result)
 
-        if result.get("status") == "completed":
-            return _completed_payload(state)
-
-    if state.completed or not state.pending_fields:
-        return _completed_payload(state)
-
-    try:
-        question = await service.next_question(state)
+        _store_history(
+            user_id,
+            "question",
+            {"field": state.current_field, "question": question},
+        )
+        payload = _state_payload(state, question=question)
+        return success_response(
+            "Chatbot response generated successfully.",
+            200,
+            {"user_id": user_id, "result": payload},
+        )
+    except HTTPException as exc:
+        return error_response(str(exc.detail), exc.status_code, {"user_id": user_id})
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to generate chatbot question: {exc}") from exc
-
-    if question is None:
-        return _completed_payload(state)
-
-    _store_history(
-        user_id,
-        "question",
-        {"field": state.current_field, "question": question},
-    )
-    return _state_payload(state, question=question)
+        return error_response(
+            str(exc) or "Unexpected error occurred.",
+            500,
+            {"user_id": user_id},
+        )
 
 
 @app.get("/chatbot/session/{user_id}")
 async def chatbot_session(user_id: str):
-    state = store.get(user_id)
-    if not state:
-        raise HTTPException(status_code=404, detail="No active chatbot session for this user.")
+    try:
+        state = store.get(user_id)
+        if not state:
+            raise HTTPException(status_code=404, detail="No active chatbot session for this user.")
 
-    return {
-        "user_id": state.user_id,
-        "current_field": state.current_field,
-        "missing_fields": list(state.pending_fields),
-        "completed": state.completed,
-        "resume": state.resume.data,
-    }
+        payload = {
+            "user_id": state.user_id,
+            "current_field": state.current_field,
+            "missing_fields": list(state.pending_fields),
+            "completed": state.completed,
+            "resume": state.resume.data,
+        }
+        return success_response(
+            "Chatbot session fetched successfully.",
+            200,
+            {"user_id": user_id, "result": payload},
+        )
+    except HTTPException as exc:
+        return error_response(str(exc.detail), exc.status_code, {"user_id": user_id})
+    except Exception as exc:
+        return error_response(
+            str(exc) or "Unexpected error occurred.",
+            500,
+            {"user_id": user_id},
+        )
 
 
 @app.delete("/chatbot/session/{user_id}")
 async def chatbot_reset(user_id: str):
-    store.delete(user_id)
-    return {"status": "deleted", "user_id": user_id}
+    try:
+        store.delete(user_id)
+        return success_response(
+            "Chatbot session deleted successfully.",
+            200,
+            {"user_id": user_id},
+        )
+    except HTTPException as exc:
+        return error_response(str(exc.detail), exc.status_code, {"user_id": user_id})
+    except Exception as exc:
+        return error_response(
+            str(exc) or "Unexpected error occurred.",
+            500,
+            {"user_id": user_id},
+        )
 
 # if __name__ == "__main__":
 #     uvicorn.run("chatbot_routes:app", host="0.0.0.0", port=8000, reload=True)

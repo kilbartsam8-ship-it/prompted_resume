@@ -13,9 +13,15 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from Resume.features.video_validator.service import VideoValidationService
+from Resume.delivery.api.response_utils import (
+    error_response,
+    register_exception_handlers,
+    success_response,
+)
 
 
 app = FastAPI(title="Video Validation API")
+register_exception_handlers(app)
 service = VideoValidationService()
 
 TMP_DIR = PROJECT_ROOT / "tmp" / "video_validation_api"
@@ -53,14 +59,27 @@ def _load_json_file(upload: UploadFile) -> dict:
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok"}
+    return success_response("Health check successful.", 200, {"status": "ok"})
 
 
 @app.post("/video/validate/path")
 async def validate_video_by_path(body: VideoValidateBody):
-    result = await service.validate_video_async(body.video_path, body.resume_json or {})
-    result["user_id"] = body.user_id
-    return result
+    try:
+        result = await service.validate_video_async(body.video_path, body.resume_json or {})
+        result["user_id"] = body.user_id
+        return success_response(
+            "Video validation completed successfully.",
+            200,
+            {"user_id": body.user_id, "result": result},
+        )
+    except HTTPException as exc:
+        return error_response(str(exc.detail), exc.status_code, {"user_id": body.user_id})
+    except Exception as exc:
+        return error_response(
+            str(exc) or "Unexpected error occurred.",
+            500,
+            {"user_id": body.user_id},
+        )
 
 
 @app.post("/video/validate/file")
@@ -69,15 +88,27 @@ async def validate_video_by_file(
     video: UploadFile = File(...),
     resume_json: str = Form(None, description="Optional resume JSON string")
 ):
+    try:
+        saved_video = _save_upload(video, UPLOAD_DIR)
+        resume_data: dict = {}
+        if resume_json is not None:
+            resume_data = _load_json_file(resume_json)
 
-    saved_video = _save_upload(video, UPLOAD_DIR)
-    resume_data: dict = {}
-    if resume_json is not None:
-        resume_data = _load_json_file(resume_json)
-
-    result = await service.validate_video_async(str(saved_video), resume_data)
-    result["user_id"] = user_id
-    return result
+        result = await service.validate_video_async(str(saved_video), resume_data)
+        result["user_id"] = user_id
+        return success_response(
+            "Video validation completed successfully.",
+            200,
+            {"user_id": user_id, "result": result},
+        )
+    except HTTPException as exc:
+        return error_response(str(exc.detail), exc.status_code, {"user_id": user_id})
+    except Exception as exc:
+        return error_response(
+            str(exc) or "Unexpected error occurred.",
+            500,
+            {"user_id": user_id},
+        )
 
 # if __name__ == "__main__":
 #     uvicorn.run("video_validation_api:app", host="0.0.0.0", port=80, reload=True)

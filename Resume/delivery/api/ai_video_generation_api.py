@@ -20,9 +20,15 @@ from Resume.features.ai_video_generation.audio.tts_engine import TTSEngine
 from Resume.features.ai_video_generation.llm.script_generator import IntroScriptGenerator
 from Resume.features.ai_video_generation.subtitles.srt_generator import SRTGenerator
 from Resume.features.ai_video_generation.video.renderer import VideoRenderer
+from Resume.delivery.api.response_utils import (
+    error_response,
+    register_exception_handlers,
+    success_response,
+)
 
 
 app = FastAPI(title="AI Video Generation API")
+register_exception_handlers(app)
 
 
 class AIVideoGenerateBody(BaseModel):
@@ -91,7 +97,7 @@ def _load_resume_json_from_path(resume_json_path: str) -> dict:
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok"}
+    return success_response("Health check successful.", 200, {"status": "ok"})
 
 
 async def _generate_ai_video(
@@ -195,13 +201,27 @@ async def _generate_ai_video(
 
 @app.post("/ai-video/generate/path")
 async def ai_video_generate_by_path(body: AIVideoGeneratePathBody):
-    resume_json = _load_resume_json_from_path(body.resume_json_path)
-    return await _generate_ai_video(
-        user_id=body.user_id,
-        resume_json=resume_json,
-        voice_id_input=body.voice_id,
-        audio_path_input=body.audio_path,
-    )
+    try:
+        resume_json = _load_resume_json_from_path(body.resume_json_path)
+        result = await _generate_ai_video(
+            user_id=body.user_id,
+            resume_json=resume_json,
+            voice_id_input=body.voice_id,
+            audio_path_input=body.audio_path,
+        )
+        return success_response(
+            "AI video generated successfully.",
+            200,
+            {"user_id": body.user_id, "result": result},
+        )
+    except HTTPException as exc:
+        return error_response(str(exc.detail), exc.status_code, {"user_id": body.user_id})
+    except Exception as exc:
+        return error_response(
+            str(exc) or "Unexpected error occurred.",
+            500,
+            {"user_id": body.user_id},
+        )
 
 
 @app.post("/ai-video/generate/file")
@@ -211,19 +231,33 @@ async def ai_video_generate_by_file(
     voice_id: str | None = Form(None),
     audio_file: UploadFile | None = File(None, description="Optional custom audio file"),
 ):
-    resume_json = _load_resume_json_from_upload(resume_json_file)
+    try:
+        resume_json = _load_resume_json_from_upload(resume_json_file)
 
-    audio_path: str | None = None
-    if audio_file is not None:
-        saved_audio = _save_upload(audio_file, UPLOAD_DIR)
-        audio_path = str(saved_audio)
+        audio_path: str | None = None
+        if audio_file is not None:
+            saved_audio = _save_upload(audio_file, UPLOAD_DIR)
+            audio_path = str(saved_audio)
 
-    return await _generate_ai_video(
-        user_id=user_id,
-        resume_json=resume_json,
-        voice_id_input=voice_id,
-        audio_path_input=audio_path,
-    )
+        result = await _generate_ai_video(
+            user_id=user_id,
+            resume_json=resume_json,
+            voice_id_input=voice_id,
+            audio_path_input=audio_path,
+        )
+        return success_response(
+            "AI video generated successfully.",
+            200,
+            {"user_id": user_id, "result": result},
+        )
+    except HTTPException as exc:
+        return error_response(str(exc.detail), exc.status_code, {"user_id": user_id})
+    except Exception as exc:
+        return error_response(
+            str(exc) or "Unexpected error occurred.",
+            500,
+            {"user_id": user_id},
+        )
 
 # if __name__ == "__main__":
 #     uvicorn.run("ai_video_generation_api:app", host="0.0.0.0", port=8080, reload=True)
