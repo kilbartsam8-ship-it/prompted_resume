@@ -134,13 +134,13 @@ async def chatbot(body: ChatbotRequestBody):
 
         if body.answer is not None:
             if state.current_field:
-            try:
-                result = await service.handle_user_input(state, body.answer)
-            except Exception as exc:
-                raise HTTPException(
-                    status_code=500, detail=f"Failed to process chatbot answer: {exc}"
-                ) from exc
-
+                try:
+                    result = await service.handle_user_input(state, body.answer)
+                except Exception as exc:
+                    raise HTTPException(
+                        status_code=500, detail=f"Failed to process chatbot answer: {exc}"
+                    ) from exc
+    
             if result.get("status") == "invalid":
                 _store_history(
                     user_id,
